@@ -39,3 +39,11 @@
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/site.webmanifest
+/logo.webp
+/full-logo.webp
+/apple-touch-icon.png
+/android-chrome-192x192.png
+/android-chrome-512x512.png
+  Cache-Control: public, max-age=86400
