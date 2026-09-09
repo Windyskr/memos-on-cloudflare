@@ -1,4 +1,40 @@
-/*
+/
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/index.html
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/home
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/explore
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/archived
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/attachments
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/inbox
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/setting
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/auth/*
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/u/*
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/memos/*
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/403
+  Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+/404
   Cache-Control: public, max-age=60, stale-while-revalidate=300
 
 /assets/*
