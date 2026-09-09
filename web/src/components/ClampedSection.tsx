@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useTranslate } from "@/utils/i18n";
 
@@ -16,10 +16,10 @@ interface ClampedSectionProps {
 }
 
 /**
- * The one truncation mechanism for compact cards: measure the content, and when it is
- * tall enough, collapse it to a fixed-height preview with a fade and a Show more/less
- * toggle. The inner div is never clamped, so observing it keeps the measurement live
- * while images and embeds load.
+ * The one truncation mechanism for compact cards: measure the content once after the
+ * initial layout, and when it is tall enough, collapse it to a fixed-height preview
+ * with a fade and a Show more/less toggle. The measurement is intentionally not kept
+ * live so media and embeds cannot trigger a re-layout on every size change.
  */
 const ClampedSection = ({ enabled, children }: ClampedSectionProps) => {
   const t = useTranslate();
@@ -27,18 +27,13 @@ const ClampedSection = ({ enabled, children }: ClampedSectionProps) => {
   const [clamped, setClamped] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = measureRef.current;
     if (!enabled || !el) {
       setClamped(false);
       return;
     }
-    const check = () => setClamped(el.offsetHeight > CLAMP_TRIGGER_HEIGHT_PX);
-    check();
-    if (typeof ResizeObserver === "undefined") return;
-    const observer = new ResizeObserver(check);
-    observer.observe(el);
-    return () => observer.disconnect();
+    setClamped(el.offsetHeight > CLAMP_TRIGGER_HEIGHT_PX);
   }, [enabled]);
 
   const collapsed = clamped && !expanded;
