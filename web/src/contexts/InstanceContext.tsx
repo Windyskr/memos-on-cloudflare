@@ -125,19 +125,27 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.GENERAL) }),
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.MEMO_RELATED) }),
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.TAGS) }),
-      ]);
-      const [profile, [generalSetting, memoRelatedSettingResponse, tagsSettingResponse]] = await Promise.all([
-        profilePromise,
-        settingsPromise,
-      ]);
+      ]).then(([generalSetting, memoRelatedSettingResponse, tagsSettingResponse]) => {
+        setState((prev) => ({
+          ...prev,
+          settings: [generalSetting, memoRelatedSettingResponse, tagsSettingResponse] as InstanceSetting[],
+        }));
+      });
 
-      setState({
+      // Settings have safe local defaults, so they can finish in the background
+      // while the router and the initial memo query start as soon as the profile is ready.
+      void settingsPromise.catch((error) => {
+        console.error("Failed to load instance settings:", error);
+      });
+
+      const profile = await profilePromise;
+      setState((prev) => ({
+        ...prev,
         profile,
-        settings: [generalSetting, memoRelatedSettingResponse, tagsSettingResponse] as InstanceSetting[],
         isInitialized: true,
         isLoading: false,
         profileLoaded: true,
-      });
+      }));
     } catch (error) {
       console.error("Failed to initialize instance:", error);
       setState((prev) => ({
