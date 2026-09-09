@@ -120,12 +120,15 @@ export function InstanceProvider({ children }: { children: ReactNode }) {
   const initialize = useCallback(async () => {
     setState((prev) => ({ ...prev, isLoading: true }));
     try {
-      const profile = await instanceServiceClient.getInstanceProfile({});
-
-      const [generalSetting, memoRelatedSettingResponse, tagsSettingResponse] = await Promise.all([
+      const profilePromise = instanceServiceClient.getInstanceProfile({});
+      const settingsPromise = Promise.all([
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.GENERAL) }),
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.MEMO_RELATED) }),
         instanceServiceClient.getInstanceSetting({ name: buildInstanceSettingName(InstanceSetting_Key.TAGS) }),
+      ]);
+      const [profile, [generalSetting, memoRelatedSettingResponse, tagsSettingResponse]] = await Promise.all([
+        profilePromise,
+        settingsPromise,
       ]);
 
       setState({
