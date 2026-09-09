@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { ArrowUpIcon } from "lucide-react";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { MentionResolutionProvider } from "@/components/MemoContent/MentionResolutionContext";
 import { deriveDefaultCreateTimeFromFilters } from "@/components/MemoEditor/utils/deriveDefaultCreateTime";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,62 @@ import MemoFilters from "../MemoFilters";
 import Skeleton from "../Skeleton";
 
 const MemoEditor = lazy(() => import("../MemoEditor"));
+
+const MEMO_ESTIMATED_HEIGHT_PX = 220;
+const MEMO_VIRTUAL_OVERSCAN = 3;
+
+interface VirtualMemoItemsProps {
+  memos: Memo[];
+  renderer: (memo: Memo) => JSX.Element;
+}
+
+const VirtualMemoItems = ({ memos, renderer }: VirtualMemoItemsProps) => {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    const updateScrollMargin = () => {
+      const list = listRef.current;
+      if (!list) return;
+
+      const nextScrollMargin = Math.max(0, Math.round(list.getBoundingClientRect().top + window.scrollY));
+      setScrollMargin((previous) => (previous === nextScrollMargin ? previous : nextScrollMargin));
+    };
+
+    updateScrollMargin();
+    window.addEventListener("resize", updateScrollMargin);
+    return () => window.removeEventListener("resize", updateScrollMargin);
+  }, [memos.length]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: memos.length,
+    estimateSize: () => MEMO_ESTIMATED_HEIGHT_PX,
+    getItemKey: (index) => memos[index]?.name ?? index,
+    overscan: MEMO_VIRTUAL_OVERSCAN,
+    scrollMargin,
+  });
+
+  return (
+    <div ref={listRef} className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+      {virtualizer.getVirtualItems().map((virtualItem) => {
+        const memo = memos[virtualItem.index];
+        if (!memo) return null;
+
+        return (
+          <div
+            key={memo.name}
+            ref={virtualizer.measureElement}
+            data-index={virtualItem.index}
+            className="absolute top-0 left-0 w-full flow-root"
+            style={{ transform: `translateY(${virtualItem.start - scrollMargin}px)` }}
+          >
+            {renderer(memo)}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 interface Props {
   renderer: (memo: Memo) => JSX.Element;
@@ -168,7 +225,7 @@ const PagedMemoList = (props: Props) => {
               </Suspense>
             ) : null}
             <MemoFilters />
-            {sortedMemoList.map((memo) => props.renderer(memo))}
+            <VirtualMemoItems memos={sortedMemoList} renderer={props.renderer} />
 
             {/* Loading indicator for pagination */}
             {isFetchingNextPage && <Skeleton showCreator={props.showCreator} count={2} />}
