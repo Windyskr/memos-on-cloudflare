@@ -209,21 +209,23 @@ const PagedMemoList = (props: Props) => {
   const children = (
     <MentionResolutionProvider contents={sortedMemoList.map((memo) => memo.content)}>
       <div className="flex flex-col justify-start w-full max-w-2xl mx-auto">
+        {/* The editor does not depend on memo data; start loading it in parallel with the list. */}
+        {showMemoEditor ? (
+          <Suspense fallback={null}>
+            <MemoEditor
+              className="mb-2"
+              cacheKey="home-memo-editor"
+              placeholder={t("editor.any-thoughts")}
+              defaultCreateTime={defaultCreateTime}
+            />
+          </Suspense>
+        ) : null}
+
         {/* Show skeleton loader during initial load */}
         {isLoading ? (
           <Skeleton showCreator={props.showCreator} count={4} />
         ) : (
           <>
-            {showMemoEditor ? (
-              <Suspense fallback={null}>
-                <MemoEditor
-                  className="mb-2"
-                  cacheKey="home-memo-editor"
-                  placeholder={t("editor.any-thoughts")}
-                  defaultCreateTime={defaultCreateTime}
-                />
-              </Suspense>
-            ) : null}
             <MemoFilters />
             <VirtualMemoItems memos={sortedMemoList} renderer={props.renderer} />
 
