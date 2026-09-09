@@ -1,5 +1,6 @@
 import { lazy } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router-dom";
+import { getAccessToken } from "@/auth-state";
 import App from "@/App";
 import { ChunkLoadErrorFallback } from "@/components/ErrorBoundary";
 import MainLayout from "@/layouts/MainLayout";
@@ -60,7 +61,16 @@ export function preloadInitialRoute() {
   if (typeof window === "undefined") return;
 
   const { pathname } = window.location;
-  const loader = pathname === Routes.HOME ? routeLoaders.home : pathname === Routes.EXPLORE ? routeLoaders.explore : pathname === Routes.ARCHIVED ? routeLoaders.archived : undefined;
+  const loader =
+    pathname === Routes.HOME
+      ? getAccessToken()
+        ? routeLoaders.home
+        : undefined
+      : pathname === Routes.EXPLORE
+        ? routeLoaders.explore
+        : pathname === Routes.ARCHIVED
+          ? routeLoaders.archived
+          : undefined;
   if (loader) {
     void loader();
   }
